@@ -12,9 +12,68 @@ library(modelr)
 library(mgcv)
 ```
 
+# Problem 1
+
+
 _Reading in Birthweight Data_ 
 
 ```{r, warning = FALSE, message=FALSE}
 birthweight = 
   read_csv("./data/birthweight.csv")
 ```
+
+
+_Cleaning Birthweight Data_ 
+
+```{r, warning = FALSE, message=FALSE}
+birthweight_clean = 
+  birthweight %>% 
+  janitor::clean_names() %>% 
+  drop_na() %>% 
+  mutate(mrace = as.factor(mrace),
+         babysex = as.character(babysex),
+         frace = as.factor(frace),
+         malform = as.character(malform)) %>% 
+    mutate(mrace = recode(mrace,
+                   '1' = "white", 
+                   '2' = "black", 
+                   '3' = "asian", 
+                   '4' = "puerto rican",
+                   '8' = "other")) %>% 
+    mutate(frace = recode(frace,
+                   '1' = "white", 
+                   '2' = "black", 
+                   '3' = "asian", 
+                   '4' = "puerto rican",
+                   '8' = "other",
+                   '9' = "unknown")) 
+```
+
+
+_Proposing a regression model based on hypothesized structure_
+
+```{r}
+fit = lm(bwt ~ mrace + fincome + gaweeks, data = birthweight_clean)
+
+fit %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  mutate(term = str_replace(term, "mrace", "Mother's Race: ")) %>% 
+  knitr::kable(digits = 3)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

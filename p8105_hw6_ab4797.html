@@ -370,9 +370,83 @@ summary {
 </div>
 
 
+<div id="problem-1" class="section level1">
+<h1>Problem 1</h1>
 <p><em>Reading in Birthweight Data</em></p>
 <pre class="r"><code>birthweight = 
   read_csv(&quot;./data/birthweight.csv&quot;)</code></pre>
+<p><em>Cleaning Birthweight Data</em></p>
+<pre class="r"><code>birthweight_clean = 
+  birthweight %&gt;% 
+  janitor::clean_names() %&gt;% 
+  drop_na() %&gt;% 
+  mutate(mrace = as.factor(mrace),
+         babysex = as.character(babysex),
+         frace = as.factor(frace),
+         malform = as.character(malform)) %&gt;% 
+    mutate(mrace = recode(mrace,
+                   '1' = &quot;white&quot;, 
+                   '2' = &quot;black&quot;, 
+                   '3' = &quot;asian&quot;, 
+                   '4' = &quot;puerto rican&quot;,
+                   '8' = &quot;other&quot;)) %&gt;% 
+    mutate(frace = recode(frace,
+                   '1' = &quot;white&quot;, 
+                   '2' = &quot;black&quot;, 
+                   '3' = &quot;asian&quot;, 
+                   '4' = &quot;puerto rican&quot;,
+                   '8' = &quot;other&quot;,
+                   '9' = &quot;unknown&quot;)) </code></pre>
+<p><em>Proposing a regression model based on hypothesized structure</em></p>
+<pre class="r"><code>fit = lm(bwt ~ mrace + fincome + gaweeks, data = birthweight_clean)
+
+fit %&gt;% 
+  broom::tidy() %&gt;% 
+  select(term, estimate, p.value) %&gt;% 
+  mutate(term = str_replace(term, &quot;mrace&quot;, &quot;Mother's Race: &quot;)) %&gt;% 
+  knitr::kable(digits = 3)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">(Intercept)</td>
+<td align="right">843.890</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="even">
+<td align="left">Mother’s Race: black</td>
+<td align="right">-232.759</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="odd">
+<td align="left">Mother’s Race: asian</td>
+<td align="right">-114.769</td>
+<td align="right">0.100</td>
+</tr>
+<tr class="even">
+<td align="left">Mother’s Race: puerto rican</td>
+<td align="right">-147.107</td>
+<td align="right">0.000</td>
+</tr>
+<tr class="odd">
+<td align="left">fincome</td>
+<td align="right">0.554</td>
+<td align="right">0.054</td>
+</tr>
+<tr class="even">
+<td align="left">gaweeks</td>
+<td align="right">59.802</td>
+<td align="right">0.000</td>
+</tr>
+</tbody>
+</table>
+</div>
 
 
 
