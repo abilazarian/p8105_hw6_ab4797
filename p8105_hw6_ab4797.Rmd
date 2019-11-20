@@ -166,7 +166,7 @@ We can see based on the variance in prediction error that the model with interac
 
 _Importing weather data_ 
 
-```{r}
+```{r, warning = FALSE, message = FALSE}
 weather_df = 
   rnoaa::meteo_pull_monitors(
     c("USW00094728"),
@@ -202,9 +202,9 @@ mutate(log_intercept = log(intercept*tmin)) %>%
 
 This distribution does not have heavy tails indicating that there are few outliers and data is approximately normally distributed. 
 
-_Finding and Plotting R Squared_
+_Produce estimate of R Squared using 5000 bootstrap estimates_
 
-```{r}
+```{r, warning = FALSE, message = FALSE}
   weather_df %>% 
   modelr::bootstrap(n = 5000) %>% 
   mutate(models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
@@ -216,3 +216,53 @@ _Finding and Plotting R Squared_
 ```
 
 Similar to the log distribution, the R squared distribution does not have heavy tails indicating few outliers and data is approximately normally distributed. 
+
+
+
+_95% CI for R.Squared_
+
+```{r, warning = FALSE, message = FALSE}
+  weather_df %>% 
+  modelr::bootstrap(n = 5000) %>% 
+  mutate(models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::glance)) %>% 
+  select(results) %>% 
+  unnest(results) %>% 
+  select(r.squared) %>% 
+summarize(
+lower_CI = quantile(r.squared, c(.025)),
+upper_CI = quantile(r.squared, c(.975))) %>% 
+  knitr::kable()
+```
+
+The 95% CI for R Squared is 0.89 to 0.93. 
+
+_95% CI for log(beta0*beta1)_
+
+
+```{r, warning = FALSE, message = FALSE}
+weather_df %>% 
+  modelr::bootstrap(n = 5000) %>% 
+  mutate(models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::tidy)) %>% 
+  select(results) %>% 
+  unnest(results) %>% 
+select(term, estimate) %>% 
+  pivot_wider(
+names_from = term, values_from = estimate) %>% 
+  unnest() %>% 
+  janitor::clean_names() %>% 
+mutate(log_intercept = log(intercept*tmin)) %>% 
+summarize(
+lower_CI = quantile(log_intercept, c(.025)),
+upper_CI = quantile(log_intercept, c(.975))) %>% 
+  knitr::kable()
+
+```
+
+The 95% CI for the log of beta null hat to beta one hat is 1.97 to 2.06. 
+
+
+
+
+
