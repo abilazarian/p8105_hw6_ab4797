@@ -159,5 +159,60 @@ pivot_longer(
   ggplot(aes(x = model, y = rmse)) + geom_violin(color = "blue") + labs(x = "Models", y = "RMSE")
 
 ```
+We can see based on the variance in prediction error that the model with interaction terms has the greatest predictive accuracy. 
 
 
+# Problem 2 
+
+_Importing weather data_ 
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(id, USW00094728 = "CentralPark_NY"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+```
+
+_Produce estimate of log(Bo^*B1^) using 5000 bootstrap estimates_
+
+```{r, warning = FALSE, message = FALSE}
+set.seed(1)
+
+weather_df %>% 
+  modelr::bootstrap(n = 5000) %>% 
+  mutate(models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::tidy)) %>% 
+  select(results) %>% 
+  unnest(results) %>% 
+select(term, estimate) %>% 
+  pivot_wider(
+names_from = term, values_from = estimate) %>% 
+  unnest() %>% 
+  janitor::clean_names() %>% 
+mutate(log_intercept = log(intercept*tmin)) %>% 
+    ggplot(aes(x = log_intercept)) + geom_density() + labs(x = "Log(Beta0 * Beta1)", y = "Density")
+```
+
+This distribution does not have heavy tails indicating that there are few outliers and data is approximately normally distributed. 
+
+_Finding and Plotting R Squared_
+
+```{r}
+  weather_df %>% 
+  modelr::bootstrap(n = 5000) %>% 
+  mutate(models = map(strap, ~ lm(tmax ~ tmin, data = .x)),
+    results = map(models, broom::glance)) %>% 
+  select(results) %>% 
+  unnest(results) %>% 
+  select(r.squared) %>% 
+  ggplot(aes(x = r.squared)) + geom_density() + labs(x = "R Squared", y = "Density", title = "Distribution of R Squared")
+```
+
+Similar to the log distribution, the R squared distribution does not have heavy tails indicating few outliers and data is approximately normally distributed. 
