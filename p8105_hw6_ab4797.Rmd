@@ -81,13 +81,83 @@ birthweight_clean %>%
 ```
 
 
+_Comparing my model_ 
+
+One using length at birth and gestational age as predictors (main effects only)
+
+```{r}
+main_effects = lm(bwt ~ blength + gaweeks, data = birthweight_clean)
+
+main_effects %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  mutate(term = str_replace(term, "mrace", "Mother's Race: ")) %>% 
+  knitr::kable(digits = 3)
+```
 
 
+One using head circumference, length, sex, and all interactions (including the three-way interaction) between these
+
+```{r}
+interaction = lm(bwt ~ blength + babysex + bhead + blength * babysex + blength * bhead + bhead * babysex + blength * bhead * babysex, data = birthweight_clean)
+
+interaction %>% 
+  broom::tidy() %>% 
+  select(term, estimate, p.value) %>% 
+  mutate(term = str_replace(term, "mrace", "Mother's Race: ")) %>% 
+  knitr::kable(digits = 3)
+```
 
 
+_Plotting each model_
 
+```{r}
+  birthweight_clean %>% 
+  gather_predictions(fit, main_effects, interaction) %>%
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = blength, y = bwt)) + 
+  geom_point(alpha = .5) +
+  geom_smooth(method = "lm", color = "red") +
+  facet_grid(~model)
+```
 
+_Fit models to training data and obtain RMSEs_
 
+```{r}
+cv_df = 
+crossv_mc(birthweight, 100) 
 
+cv_df = 
+cv_df %>% 
+mutate(
+main_effects = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
+
+interaction = map(train, ~lm(bwt ~ blength + babysex + bhead + blength * babysex + blength * bhead + bhead * babysex + blength * bhead * babysex, data = .x)),
+
+fit = map(train, ~lm(bwt ~ mrace + fincome + gaweeks, data = .x))
+) %>% 
+
+  mutate(
+rmse_model_main_effects = map2_dbl(main_effects, test, ~rmse(model = .x, data = .y)),
+rmse_model_interaction = map2_dbl(interaction, test, ~rmse(model = .x, data = .y)),
+rmse_model_fit = map2_dbl(fit, test, ~rmse(model = .x, data = .y))
+)
+```
+
+_Plot prediction error distribution for each model_
+```{r}
+cv_df %>% 
+  select(starts_with("rmse")) %>% 
+pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+    mutate(model = str_replace(model, "model_", "model: ")) %>% 
+
+  ggplot(aes(x = model, y = rmse)) + geom_violin(color = "blue") + labs(x = "Models", y = "RMSE")
+
+```
 
 
