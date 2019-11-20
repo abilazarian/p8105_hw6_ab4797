@@ -1,0 +1,20 @@
+---
+title: "Homework 6"
+author: "Ani Bilazarian"
+date: "11/20/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning = FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(modelr)
+library(mgcv)
+```
+
+_Reading in Birthweight Data_ 
+
+```{r, warning = FALSE, message=FALSE}
+birthweight = 
+  read_csv("./data/birthweight.csv")
+```
