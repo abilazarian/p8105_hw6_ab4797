@@ -62,9 +62,23 @@ fit %>%
   knitr::kable(digits = 3)
 ```
 
+I chose this model as research indicates that mother's race, income, and gestational age are determinants of low birthweight. This [study](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5014333/) found that African-American and Latino mothers who smoked and lived in poorer communities were three times more likely to have an infant with lower birth weight compared to non-smoking and wealthier women. 
 
+_Adding Residuals and Fitted Values_ 
 
+```{r}
+birthweight_clean =
+  modelr::add_residuals(birthweight_clean, fit) 
 
+birthweight_clean =
+modelr::add_predictions(birthweight_clean, fit)
+```
+
+_Plotting Residuals versus Fitted values_
+```{r}
+birthweight_clean %>% 
+  ggplot(aes(x = pred, y = resid)) + geom_point(color = "red") + labs(x = "Fitted Values", y = "Residuals", title = "Plot of Residuals vs. Fitted Values")
+```
 
 
 
