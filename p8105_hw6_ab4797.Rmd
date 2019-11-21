@@ -196,7 +196,7 @@ select(term, estimate) %>%
 names_from = term, values_from = estimate) %>% 
   unnest() %>% 
   janitor::clean_names() %>% 
-mutate(log_intercept = log(intercept*tmin)) %>% 
+  mutate(log_intercept = log10(intercept*tmin)) %>% 
     ggplot(aes(x = log_intercept)) + geom_density() + labs(x = "Log(Beta0 * Beta1)", y = "Density")
 ```
 
@@ -252,7 +252,7 @@ select(term, estimate) %>%
 names_from = term, values_from = estimate) %>% 
   unnest() %>% 
   janitor::clean_names() %>% 
-mutate(log_intercept = log(intercept*tmin)) %>% 
+mutate(log_intercept = log10(intercept*tmin)) %>% 
 summarize(
 lower_CI = quantile(log_intercept, c(.025)),
 upper_CI = quantile(log_intercept, c(.975))) %>% 
@@ -260,7 +260,7 @@ upper_CI = quantile(log_intercept, c(.975))) %>%
 
 ```
 
-The 95% CI for the log of beta null hat to beta one hat is 1.97 to 2.06. 
+The 95% CI for the log of beta null hat to beta one hat is 0.85 to 0.89. 
 
 
 
